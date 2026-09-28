@@ -1,0 +1,271 @@
+--[[
+    GazeUI
+    Versión sin funciones de chat/bypass
+]]
+
+local yapping = true
+local GazeCooldown = 0.8
+
+if not game:IsLoaded() then
+    game.Loaded:Wait()
+end
+
+local guiName = "GazeUI"
+local coreGui = cloneref(game:GetService("CoreGui")) or game:GetService("CoreGui")
+
+if coreGui:FindFirstChild(guiName) then
+    print("• GazeUI ya está ejecutado.")
+    return
+end
+
+local function showFadeText(text)
+    local fadeGui = Instance.new("ScreenGui")
+    fadeGui.Name = "GazeNotification"
+    fadeGui.Parent = coreGui
+
+    local label = Instance.new("TextLabel")
+    label.Parent = fadeGui
+    label.Size = UDim2.new(0.5, 0, 0.2, 0)
+    label.Position = UDim2.new(0.25, 0, 0.4, 0)
+    label.BackgroundTransparency = 1
+    label.TextTransparency = 1
+    label.Text = text
+    label.TextColor3 = Color3.fromRGB(0, 255, 255)
+    label.TextScaled = true
+    label.Font = Enum.Font.GothamBlack
+
+    local TweenService = game:GetService("TweenService")
+
+    local fadeIn = TweenService:Create(
+        label,
+        TweenInfo.new(GazeCooldown),
+        {TextTransparency = 0}
+    )
+
+    fadeIn:Play()
+    fadeIn.Completed:Wait()
+
+    task.wait(GazeCooldown)
+
+    local fadeOut = TweenService:Create(
+        label,
+        TweenInfo.new(GazeCooldown),
+        {TextTransparency = 1}
+    )
+
+    fadeOut:Play()
+    fadeOut.Completed:Wait()
+
+    fadeGui:Destroy()
+end
+
+if yapping then
+    showFadeText("Made By GazerHa")
+    showFadeText("GazeUI cargado.")
+    showFadeText("Versión sin funciones de chat.")
+end
+
+-- GUI PRINCIPAL
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "GazeUI_Main"
+gui.ResetOnSpawn = false
+gui.Parent = coreGui
+
+local GazeMain = Instance.new("Frame")
+GazeMain.Name = "GazeMain"
+GazeMain.Size = UDim2.new(0.5, 0, 0.5, 0)
+GazeMain.Position = UDim2.new(0.25, 0, 0.25, 0)
+GazeMain.BackgroundColor3 = Color3.fromRGB(145, 145, 145)
+GazeMain.BackgroundTransparency = 0.25
+GazeMain.BorderSizePixel = 0
+GazeMain.Active = true
+GazeMain.Parent = gui
+
+local mainCorner = Instance.new("UICorner")
+mainCorner.CornerRadius = UDim.new(0, 18)
+mainCorner.Parent = GazeMain
+
+local GazeTitle = Instance.new("TextLabel")
+GazeTitle.Name = "GazeTitle"
+GazeTitle.Size = UDim2.new(1, 0, 0.2, 0)
+GazeTitle.Position = UDim2.new(0, 0, 0, 0)
+GazeTitle.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+GazeTitle.BackgroundTransparency = 0.25
+GazeTitle.BorderSizePixel = 0
+GazeTitle.Text = "GazeUI"
+GazeTitle.TextSize = 18
+GazeTitle.TextColor3 = Color3.fromRGB(0, 0, 0)
+GazeTitle.Font = Enum.Font.GothamBold
+GazeTitle.Parent = GazeMain
+
+local titleCorner = Instance.new("UICorner")
+titleCorner.CornerRadius = UDim.new(0, 18)
+titleCorner.Parent = GazeTitle
+
+local info = Instance.new("TextLabel")
+info.Name = "Info"
+info.Size = UDim2.new(0.8, 0, 0.25, 0)
+info.Position = UDim2.new(0.1, 0, 0.35, 0)
+info.BackgroundTransparency = 1
+info.Text = "GazeUI"
+info.TextColor3 = Color3.fromRGB(0, 0, 0)
+info.TextSize = 22
+info.Font = Enum.Font.GothamBold
+info.Parent = GazeMain
+
+-- BOTÓN CIRCULAR
+
+local toggleButton = Instance.new("TextButton")
+toggleButton.Name = "ToggleButton"
+toggleButton.Size = UDim2.new(0, 55, 0, 55)
+toggleButton.Position = UDim2.new(0, 20, 0.5, -27)
+toggleButton.BackgroundColor3 = Color3.fromRGB(100, 100, 100)
+toggleButton.BackgroundTransparency = 0.15
+toggleButton.BorderSizePixel = 0
+toggleButton.Text = "×"
+toggleButton.TextColor3 = Color3.fromRGB(0, 0, 0)
+toggleButton.TextSize = 22
+toggleButton.Font = Enum.Font.GothamBold
+toggleButton.Parent = gui
+
+local toggleCorner = Instance.new("UICorner")
+toggleCorner.CornerRadius = UDim.new(1, 0)
+toggleCorner.Parent = toggleButton
+
+local UserInputService = game:GetService("UserInputService")
+
+-- ARRASTRAR VENTANA
+
+local dragging = false
+local dragStart
+local startPosition
+local dragInput
+
+local function updateDrag(input)
+    local delta = input.Position - dragStart
+
+    GazeMain.Position = UDim2.new(
+        startPosition.X.Scale,
+        startPosition.X.Offset + delta.X,
+        startPosition.Y.Scale,
+        startPosition.Y.Offset + delta.Y
+    )
+end
+
+GazeTitle.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        dragging = true
+        dragStart = input.Position
+        startPosition = GazeMain.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                dragging = false
+            end
+        end)
+    end
+end)
+
+GazeTitle.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        dragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == dragInput and dragging then
+        updateDrag(input)
+    end
+end)
+
+-- ARRASTRAR BOTÓN CIRCULAR
+
+local draggingButton = false
+local buttonDragStart
+local buttonStartPosition
+local buttonDragInput
+local moved = false
+
+local function updateButton(input)
+    local delta = input.Position - buttonDragStart
+
+    if math.abs(delta.X) > 5 or math.abs(delta.Y) > 5 then
+        moved = true
+    end
+
+    toggleButton.Position = UDim2.new(
+        buttonStartPosition.X.Scale,
+        buttonStartPosition.X.Offset + delta.X,
+        buttonStartPosition.Y.Scale,
+        buttonStartPosition.Y.Offset + delta.Y
+    )
+end
+
+toggleButton.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        draggingButton = true
+        moved = false
+        buttonDragStart = input.Position
+        buttonStartPosition = toggleButton.Position
+
+        input.Changed:Connect(function()
+            if input.UserInputState == Enum.UserInputState.End then
+                draggingButton = false
+
+                if not moved then
+                    GazeMain.Visible = not GazeMain.Visible
+
+                    if GazeMain.Visible then
+                        toggleButton.Text = "×"
+                    else
+                        toggleButton.Text = "☰"
+                    end
+                end
+            end
+        end)
+    end
+end)
+
+toggleButton.InputChanged:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseMovement
+        or input.UserInputType == Enum.UserInputType.Touch then
+
+        buttonDragInput = input
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if input == buttonDragInput and draggingButton then
+        updateButton(input)
+    end
+end)
+
+-- CRÉDITOS
+
+local function addCredit(position)
+    local credit = Instance.new("TextLabel")
+
+    credit.Size = UDim2.new(0, 150, 0, 25)
+    credit.Position = position
+    credit.BackgroundTransparency = 1
+    credit.Text = "Eithan_Adn"
+    credit.TextColor3 = Color3.fromRGB(0, 0, 0)
+    credit.TextTransparency = 0.25
+    credit.TextSize = 14
+    credit.Font = Enum.Font.Gotham
+    credit.Parent = gui
+end
+
+addCredit(UDim2.new(0, 10, 0, 10))
+addCredit(UDim2.new(1, -160, 0, 10))
+addCredit(UDim2.new(0, 10, 1, -35))
+addCredit(UDim2.new(1, -160, 1, -35))
+
+print("• GazeUI √ listo.")
